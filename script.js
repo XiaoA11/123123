@@ -1,90 +1,130 @@
-let timeLeft = 120;
-let timerId;
-let foundDifferences = 0;
-const totalDifferences = 5; // 假设总差异数为5
-const tolerance = 20; // 允许的点击误差范围
+document.addEventListener('DOMContentLoaded', () => {
+    const grid = document.querySelector('#game');
+    const width = 8;
+    let squares = [];
+    let score = 0;
 
-// 假设的差异点坐标
-const differences = [
-    { x: 180, y: 1000, tolerance: 50, found: false },
-    { x: 970, y: 1174, tolerance: 50, found: false },
-    { x: 630, y: 634, tolerance: 50, found: false },
-    { x: 362, y: 282, tolerance: 50, found: false },
-    { x: 920, y: 390, tolerance: 50, found: false },
-    // 根据实际情况添加更多差异点
-];
-
-function updateTimer() {
-    if (timeLeft > 0) {
-        timeLeft -= 1;
-        document.getElementById('time').textContent = timeLeft;
-    } else {
-        endGame(false);
+function createBoard() {
+    for (let i = 0; i < width * width; i++) {
+        const square = document.createElement('div');
+        square.setAttribute('id', i.toString());
+        square.setAttribute('class', 'square');
+        square.style.backgroundColor = getRandomColor();
+        grid.appendChild(square);
+        squares.push(square);
     }
+    // 添加拖动事件监听器
+    addDragListeners();
 }
 
-function startGame() {
-    document.getElementById('start-button').disabled = true;
-    timerId = setInterval(updateTimer, 1000);
-    // 重置差异点的发现状态
-    differences.forEach(diff => diff.found = false);
-    foundDifferences = 0;
-    document.getElementById('found').textContent = `${foundDifferences}/${totalDifferences}`;
-}
-
-function endGame(win) {
-    clearInterval(timerId);
-    document.getElementById('start-button').disabled = false;
-    alert(win ? '恭喜！你找到了所有的差异！' : '时间到！再试一次吧！');
-    resetGame();
-}
-
-function checkDifference(event, imageNumber) {
-    // 获取图片元素
-    const image = document.getElementById(`image${imageNumber}`);
-
-    // 获取图片的显示尺寸
-    const displayedWidth = image.offsetWidth;
-    const displayedHeight = image.offsetHeight;
-
-    // 获取图片的实际尺寸
-    const actualWidth = image.naturalWidth;
-    const actualHeight = image.naturalHeight;
-
-    // 计算缩放比例
-    const scaleX = actualWidth / displayedWidth;
-    const scaleY = actualHeight / displayedHeight;
-
-    // 调整点击坐标，以匹配原始图片尺寸
-    const clickX = (event.offsetX * scaleX);
-    const clickY = (event.offsetY * scaleY);
-
-    // 检查点击位置是否接近任一差异点
-    const differenceFound = differences.some(diff => {
-        const distance = Math.sqrt(Math.pow(clickX - diff.x, 2) + Math.pow(clickY - diff.y, 2));
-        if (!diff.found && distance <= diff.tolerance) {
-            diff.found = true;
-            return true;
-        }
-        return false;
+function addDragListeners() {
+    squares.forEach(square => {
+        square.setAttribute('draggable', 'true');
+        square.addEventListener('dragstart', dragStart);
+        square.addEventListener('dragover', e => e.preventDefault());
+        square.addEventListener('dragenter', e => e.preventDefault());
+        square.addEventListener('dragleave', e => e.preventDefault());
+        square.addEventListener('drop', dragDrop);
+        square.addEventListener('dragend', dragEnd);
     });
+}
 
-    if (differenceFound) {
-        foundDifferences++;
-        document.getElementById('found').textContent = `${foundDifferences}/${totalDifferences}`;
-        if (foundDifferences === totalDifferences) {
-            endGame(true);
+    function getRandomColor() {
+        const colors = ['#FF5733', '#33FF57', '#3357FF', '#F333FF', '#FF3388'];
+        return colors[Math.floor(Math.random() * colors.length)];
+    }
+
+    let squareBeingDragged = null;
+    let squareBeingReplaced = null;
+    let squareIdBeingDragged = null;
+    let squareIdBeingReplaced = null;
+
+    function dragStart() {
+        squareBeingDragged = this;
+        squareIdBeingDragged = parseInt(squareBeingDragged.id);
+    }
+
+    function dragDrop() {
+        squareBeingReplaced = this;
+        squareIdBeingReplaced = parseInt(squareBeingReplaced.id);
+    }
+
+   
+       function dragEnd() {
+    // 定义有效移动的位置索引
+    const validMoves = [
+        squareIdBeingDragged - 1,
+        squareIdBeingDragged + 1,
+        squareIdBeingDragged - width,
+        squareIdBeingDragged + width
+    ];
+    const validMove = validMoves.includes(squareIdBeingReplaced);
+
+    // 如果是有效移动，则交换颜色
+    if (validMove) {
+        let tempColor = squareBeingDragged.style.backgroundColor;
+        squareBeingDragged.style.backgroundColor = squareBeingReplaced.style.backgroundColor;
+        squareBeingReplaced.style.backgroundColor = tempColor;
+
+        // 这里检查匹配
+        checkRowForThree();
+        checkColumnForThree();
+    }
+}
+    // 在此添加 checkRowForThree, checkColumnForThree, moveIntoSquareBelow 等函数
+function checkRowForThree() {
+    for (let i = 0; i < squares.length; i++) {
+        let rowOfThree = [i, i + 1, i + 2];
+        let decidedColor = squares[i].style.backgroundColor;
+        const isBlank = decidedColor === '';
+
+        // 排除行末尾的两个方块
+        if (rowOfThree.some(index => index % width > width - 3)) continue;
+
+        if (rowOfThree.every(index => squares[index].style.backgroundColor === decidedColor && !isBlank)) {
+            score += 3;
+            rowOfThree.forEach(index => squares[index].style.backgroundColor = '');
+            updateScore();
         }
     }
 }
 
+function checkColumnForThree() {
+    for (let i = 0; i < width * (width - 2); i++) { // 更新循环条件以覆盖所有列
+        let columnOfThree = [i, i + width, i + width * 2];
+        let decidedColor = squares[i].style.backgroundColor;
+        const isBlank = decidedColor === '';
 
-
-function resetGame() {
-    timeLeft = 120;
-    foundDifferences = 0;
-    document.getElementById('time').textContent = timeLeft;
-    document.getElementById('found').textContent = `${foundDifferences}/${totalDifferences}`;
+        if (columnOfThree.every(index => squares[index].style.backgroundColor === decidedColor && !isBlank)) {
+            score += 3;
+            columnOfThree.forEach(index => {
+                squares[index].style.backgroundColor = ''; // 或者设为特定的背景色，如 'white'
+            });
+            updateScore();
+        }
+    }
 }
 
-document.getElementById('start-button').addEventListener('click', startGame);
+function moveIntoSquareBelow() {
+    for (i = 0; i < 55; i++) {
+        if(squares[i + width].style.backgroundColor === '') {
+            squares[i + width].style.backgroundColor = squares[i].style.backgroundColor;
+            squares[i].style.backgroundColor = getRandomColor();
+        }
+    }
+}
+
+ function updateGame() {
+        moveIntoSquareBelow();
+        checkRowForThree();
+        checkColumnForThree();
+        // 可能还需要添加更多的游戏更新逻辑
+    }
+
+    function updateScore() {
+        document.getElementById('score').innerText = `Score: ${score}`;
+    }
+
+    createBoard();
+    setInterval(updateGame, 100);
+});
