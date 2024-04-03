@@ -1,0 +1,29 @@
+body, html {
+    height: 100%;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #f0f0f0;
+}
+
+#game-container {
+    text-align: center;
+}
+
+#image-container img {
+    width: 45%;
+    margin: 5px;
+    cursor: pointer;
+}
+
+#info-container {
+    margin-top: 20px;
+}
+
+button {
+    margin-top: 20px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+}
