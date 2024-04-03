@@ -1,23 +1,14 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>找茬小游戏</title>
+    <title>消消乐游戏</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="game-container">
-        <div id="image-container">
-            <img id="image1" src="1.jpg" alt="Game Image 1" onclick="checkDifference(event, 1)">
-            <img id="image2" src="2.jpg" alt="Game Image 2" onclick="checkDifference(event, 2)">
-        </div>
-        <div id="info-container">
-            <div id="timer">剩余时间: <span id="time">120</span> 秒</div>
-            <div id="score">找到差别: <span id="found">0</span>/5</div>
-        </div>
-        <button id="start-button">开始游戏</button>
-    </div>
+    <div id="game"></div>
     <script src="script.js"></script>
+    <div id="score">Score: 0</div>
 </body>
 </html>
